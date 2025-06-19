@@ -1,5 +1,5 @@
 # Docker image for Vicon motion capture system
-This repo contains dockerfile to build an image with ROS noetic with vicon_bridge package. In order to build the docker image run
+This repo contains dockerfile to build an image with ROS humble with vicon_bridge package. In order to build the docker image run
 ```
 sudo docker build -t vicon_bridge .
 ```
