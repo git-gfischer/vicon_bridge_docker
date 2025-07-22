@@ -2,22 +2,29 @@ FROM osrf/ros:noetic-desktop-full
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Clean up any old broken ROS sources or keys
-RUN rm -f /etc/apt/sources.list.d/ros2-latest.list && \
-    rm -f /etc/apt/sources.list.d/ros-latest.list && \
-    rm -f /usr/share/keyrings/ros-archive-keyring.gpg
+# Install prerequisites
+RUN apt-get update && apt-get install -y \
+    curl gnupg2 lsb-release
 
-# Install necessary tools
-RUN apt-get update && apt-get install -y curl gnupg lsb-release
+# Clean up old ROS key if it exists
+RUN rm -f /usr/share/keyrings/ros-archive-keyring.gpg && \
+    apt-key del F42ED6FBAB17C654 || true
 
-# Download and store the GPG key
-RUN curl -sSL 'https://raw.githubusercontent.com/ros/rosdistro/master/ros.key' | \
+# Download and store the new ROS key
+RUN curl -sSL "https://raw.githubusercontent.com/ros/rosdistro/master/ros.key" | \
     gpg --dearmor -o /usr/share/keyrings/ros-archive-keyring.gpg
 
-# Add the ROS 1 Noetic repository
-RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
-    http://packages.ros.org/ros/ubuntu $(lsb_release -cs) main" | \
-    tee /etc/apt/sources.list.d/ros1.list > /dev/null
+# Add ROS Noetic repository with signed-by flag
+RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
+    http://packages.ros.org/ros/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros1.list
+
+# Install ROS Noetic
+RUN apt-get update && \
+    apt-get install -y ros-noetic-desktop-full
+
+# Initialize rosdep (optional, for building other packages later)
+RUN apt-get install -y python3-rosdep && \
+    rosdep init && rosdep update
 
 
 
