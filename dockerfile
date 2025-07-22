@@ -2,31 +2,14 @@ FROM osrf/ros:noetic-desktop-full
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install prerequisites
-RUN apt-get update && apt-get install -y \
-    curl gnupg2 lsb-release
-
-# Clean up old ROS key if it exists
-RUN rm -f /usr/share/keyrings/ros-archive-keyring.gpg && \
-    apt-key del F42ED6FBAB17C654 || true
-
-# Download and store the new ROS key
-RUN curl -sSL "https://raw.githubusercontent.com/ros/rosdistro/master/ros.key" | \
-    gpg --dearmor -o /usr/share/keyrings/ros-archive-keyring.gpg
-
-# Add ROS Noetic repository with signed-by flag
-RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
-    http://packages.ros.org/ros/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros1.list
-
-# Install ROS Noetic
-RUN apt-get update && \
-    apt-get install -y ros-noetic-desktop-full
-
-# Initialize rosdep (optional, for building other packages later)
-RUN apt-get install -y python3-rosdep && \
-    rosdep init && rosdep update
-
-
+# Fix expired GPG key for ROS repo
+RUN apt-get update && apt-get install -y curl gnupg2 && \
+    rm -f /usr/share/keyrings/ros-archive-keyring.gpg && \
+    curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key | \
+    gpg --dearmor -o /usr/share/keyrings/ros-archive-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros/ubuntu focal main" \
+    > /etc/apt/sources.list.d/ros-latest.list && \
+    apt-get update
 
 # Download and build the required franka libraries
 RUN apt-get update && apt-get install -y \
