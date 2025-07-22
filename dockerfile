@@ -2,6 +2,25 @@ FROM osrf/ros:noetic-desktop-full
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Clean up any old broken ROS sources or keys
+RUN rm -f /etc/apt/sources.list.d/ros2-latest.list && \
+    rm -f /etc/apt/sources.list.d/ros-latest.list && \
+    rm -f /usr/share/keyrings/ros-archive-keyring.gpg
+
+# Install necessary tools
+RUN apt-get update && apt-get install -y curl gnupg lsb-release
+
+# Download and store the GPG key
+RUN curl -sSL 'https://raw.githubusercontent.com/ros/rosdistro/master/ros.key' | \
+    gpg --dearmor -o /usr/share/keyrings/ros-archive-keyring.gpg
+
+# Add the ROS 1 Noetic repository
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
+    http://packages.ros.org/ros/ubuntu $(lsb_release -cs) main" | \
+    tee /etc/apt/sources.list.d/ros1.list > /dev/null
+
+
+
 # Download and build the required franka libraries
 RUN apt-get update && apt-get install -y \
     build-essential \
