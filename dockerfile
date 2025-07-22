@@ -2,6 +2,9 @@ FROM osrf/ros:noetic-desktop-full
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Install required tools
+RUN apt-get install -y curl gnupg2 lsb-release
+
 # Replace the expired ROS key with the new one (dearmored)
 RUN rm -f /usr/share/keyrings/ros-archive-keyring.gpg && \
     curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key | \
