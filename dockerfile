@@ -2,23 +2,24 @@ FROM osrf/ros:noetic-desktop-full
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install required tools
-RUN apt-get install -y curl gnupg2 lsb-release
 
-# Replace the expired ROS key with the new one (dearmored)
+# Step 1: Update and install required tools
+RUN apt-get update && apt-get install -y \
+    curl gnupg2 lsb-release
+
+# Step 2: Remove old GPG key and keyring
 RUN rm -f /usr/share/keyrings/ros-archive-keyring.gpg && \
-    curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key | \
+    apt-key del F42ED6FBAB17C654 || true
+
+# Step 3: Add new key as keyring
+RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key | \
     gpg --dearmor -o /usr/share/keyrings/ros-archive-keyring.gpg
 
-# Force overwrite the repo list with proper signed-by reference
+# Step 4: Overwrite old ROS list with signed-by version (this is the real fix)
 RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
-http://packages.ros.org/ros/ubuntu focal main" \
-> /etc/apt/sources.list.d/ros-latest.list
+http://packages.ros.org/ros/ubuntu focal main" > /etc/apt/sources.list.d/ros-latest.list
 
-# Force deletion of old apt-key trust for ROS (if still cached)
-RUN apt-key del F42ED6FBAB17C654 || true
-
-# Confirm fix
+# Step 5: Now apt will work without GPG errors
 RUN apt-get update
 
 # Download and build the required franka libraries
