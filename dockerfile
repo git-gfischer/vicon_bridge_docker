@@ -1,32 +1,23 @@
-FROM osrf/ros:noetic-desktop-full
+FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+# 1. Install tools
+RUN apt-get update && apt-get install -y curl gnupg2 lsb-release
 
-# Step 1: Update and install required tools
-RUN apt-get update && apt-get install -y \
-    curl gnupg2 lsb-release
-
-# Step 2: Remove old GPG key and keyring
-RUN rm -f /usr/share/keyrings/ros-archive-keyring.gpg && \
-    apt-key del F42ED6FBAB17C654 || true
-
-# Step 3: Add new key as keyring
+# 2. Add new ROS key
 RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key | \
     gpg --dearmor -o /usr/share/keyrings/ros-archive-keyring.gpg
 
-# Step 4: Overwrite old ROS list with signed-by version (this is the real fix)
+# 3. Add ROS Noetic repo using new key
 RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
-http://packages.ros.org/ros/ubuntu focal main" > /etc/apt/sources.list.d/ros-latest.list
+http://packages.ros.org/ros/ubuntu focal main" > /etc/apt/sources.list.d/ros1.list
 
-# Step 5: Now apt will work without GPG errors
-RUN apt-get update
+# 4. Install ROS
+RUN apt-get update && apt-get install -y ros-noetic-desktop-full
 
-# Download and build the required franka libraries
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    cmake \
-    git
+# 5. Optional: rosdep
+RUN apt-get install -y python3-rosdep && rosdep init && rosdep update
 
 # Utils
 RUN apt-get install -y git wget nano sudo gawk vim iputils-ping ssh byobu software-properties-common micro curl apt-transport-https
