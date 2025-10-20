@@ -31,7 +31,8 @@ RUN apt update && apt install -y \
     git \ 
     libboost-thread-dev \ 
     libboost-date-time-dev \
-    ros-${ROS_DISTRO}-diagnostic-updater
+    ros-${ROS_DISTRO}-diagnostic-updater \
+    ros-${ROS_DISTRO}-rmw-cyclonedds-cpp
 
 # Dependencies
 RUN apt-get install -y python3-opencv ca-certificates python3-dev ninja-build \
@@ -47,7 +48,7 @@ RUN git clone https://github.com/dasc-lab/ros2-vicon-bridge.git
 COPY vicon_launch.py /colcon_ws/src/ros2-vicon-bridge/launch/all_segments.launch.py
 
 # Build
-WORKDIR /catkin_ws
+WORKDIR /colcon_ws
 RUN apt update && \
     /bin/bash -c "source /opt/ros/${ROS_DISTRO}/setup.bash && \
     colcon build --symlink-install"

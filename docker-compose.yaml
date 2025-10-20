@@ -8,9 +8,9 @@ services:
     env_file: .env 
     privileged: true
     tty: true # docker run -t
-    command: /bin/bash -c 'source /opt/ros/humble/setup.bash && \
-                           source /catkin_ws/install/setup.bash && \
-                           ros2 launch vicon_bridge all_segments.launch.py  vicon_ip:=${VICON_IP}'
+    volumes:
+     - ./activate_vicon.sh:/colcon_ws/activate_vicon.sh
+    command: bash /colcon_ws/activate_vicon.sh
 
   rviz:
     image: vicon_bridge:latest

@@ -1,18 +1,24 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
 
+
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration, TextSubstitution
+from launch_ros.actions import Node
+
 def generate_launch_description():
 
     # Declare arguments
     vicon_ip_arg = DeclareLaunchArgument(
         'vicon_ip',
-        default_value=TextSubstitution(text='192.168.1.115'),
+        default_value=TextSubstitution(text='192.168.123.13'),
         description='IP address of the Vicon computer'
     )
 
     port_arg = DeclareLaunchArgument(
         'port_number',
-        default_value=TextSubstitution(text='801'),
+        default_value=TextSubstitution(text='802'),
         description='Port number for the Vicon connection'
     )
     host_name = f"{vicon_ip_arg}:{port_arg}"
