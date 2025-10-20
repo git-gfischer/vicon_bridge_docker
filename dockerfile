@@ -1,25 +1,55 @@
-FROM osrf/ros:humble-desktop-full
+# default to $ROS_DISTRO; pass --build-arg ROS_DISTRO=jazzy for Jazzy
+ARG ROS_DISTRO=humble
 
-ENV ROS_DISTRO=humble
+# Predefine base stages per Ubuntu; names must match "<ros>_base" below
+# Jammy base for ROS $ROS_DISTRO
+FROM ubuntu:22.04 AS humble_base     
+# Noble base for ROS Jazzy
+FROM ubuntu:24.04 AS jazzy_base      
+
+# Select the right base by ROS_DISTRO ($ROS_DISTRO_base or jazzy_base)
+FROM ${ROS_DISTRO}_base AS base
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Clean up any old broken ROS sources or keys
-RUN rm -f /etc/apt/sources.list.d/ros2-latest.list && \
-    rm -f /usr/share/keyrings/ros-archive-keyring.gpg
+# setup environment
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+# Do not delete this following line !!
+ARG ROS_DISTRO 
+ENV ROS_DISTRO=$ROS_DISTRO
+ENV ROS_ROOT=/opt/ros/$ROS_DISTRO
+ENV ROS_PACKAGE=ros_base
 
-# Install tools and add the fresh GPG key
-RUN apt-get update && apt-get install -y curl gnupg2 lsb-release && \
-    curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | \
-    gpg --dearmor -o /usr/share/keyrings/ros-archive-keyring.gpg
+# Common base setup
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ca-certificates curl gnupg lsb-release locales \
+  && locale-gen en_US.UTF-8 \
+  && rm -rf /var/lib/apt/lists/*
 
-# Re-add the ROS 2 repository with correct signed-by config
-RUN echo "deb [signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -sc) main" \
-    > /etc/apt/sources.list.d/ros2-latest.list
+# Add ROS repo once, verify Ubuntu↔ROS mapping, then install
+RUN set -e; \
+    apt-get update && apt-get install -y --no-install-recommends ca-certificates curl gnupg lsb-release locales && \
+    locale-gen en_US.UTF-8 && rm -rf /var/lib/apt/lists/*; \
+    . /etc/os-release; CODENAME="$VERSION_CODENAME"; \
+    case "${ROS_DISTRO}:${CODENAME}" in \
+      humble:jammy|jazzy:noble) echo "ROS ${ROS_DISTRO} on ${CODENAME}";; \
+      *) echo "Unsupported combo: ROS ${ROS_DISTRO} on ${CODENAME}"; exit 1;; \
+    esac; \
+    mkdir -p /etc/apt/keyrings; \
+    curl -fsSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
+      | gpg --dearmor -o /etc/apt/keyrings/ros-archive-keyring.gpg; \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu ${CODENAME} main" \
+      > /etc/apt/sources.list.d/ros2.list; \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+      ros-${ROS_DISTRO}-desktop-full \
+      python3-rosdep python3-colcon-common-extensions && \
+    rosdep init || true; rosdep update || true; \
+    echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> /etc/bash.bashrc
 
-# Now update should work without errors
-RUN apt-get update
-
+RUN apt-get update 
+# RUN apt-get full-upgrade -y
 
 # Utils
 RUN apt update && apt install -y git wget nano sudo gawk vim iputils-ping ssh byobu software-properties-common micro curl apt-transport-https
