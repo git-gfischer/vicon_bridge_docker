@@ -10,10 +10,16 @@ In order to configure the vicon ip, edit the file ```.env``` and input the ip of
 ## Run the Vicon
 To run the vicon bridge 
 ```
-sudo docker compose up vicon_bridge -d 
+docker compose up vicon_bridge -d 
 ```
 
-## Run rostopic list
-TO check if the topics from vicon are working run 
+## Enter in the Docker
 ```
-sudo docker compose run vicon_bridge rostopic list
+docker compose run enter bash
+```
+
+## Rviz 
+```
+xhost +
+docker compose up rviz 
+```
