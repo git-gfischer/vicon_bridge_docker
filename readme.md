@@ -15,7 +15,7 @@ docker compose up vicon_bridge -d
 
 ## Enter in the Docker
 ```
-docker compose run enter bash
+docker compose run enter
 ```
 
 ## Rviz 
