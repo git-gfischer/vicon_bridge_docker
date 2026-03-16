@@ -86,3 +86,5 @@ RUN apt update && \
 # Add lines to the bashrc file that source ROS
 RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> /root/.bashrc
 RUN echo "source /colcon_ws/install/setup.bash" >> /root/.bashrc
+
+CMD ["/bin/bash"]

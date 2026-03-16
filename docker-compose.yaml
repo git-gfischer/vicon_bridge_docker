@@ -34,4 +34,6 @@ services:
     privileged: true
     stdin_open: true # docker run -i
     tty: true # docker run -t
+    volumes:
+      rosbags:/colcon_ws/rosbags
     command: bash
