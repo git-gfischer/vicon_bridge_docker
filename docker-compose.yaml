@@ -29,6 +29,7 @@ services:
   bash:
     image: vicon_bridge:latest
     build: .docker
+    env_file: .env 
     network_mode: host
     privileged: true
     stdin_open: true # docker run -i
